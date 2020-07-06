@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/88Navistar/tinyapp/issues"
   },
-  "homepage": "https://github.com/88Navistar/tinyapp#readme"
+  "homepage": "https://github.com/88Navistar/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
