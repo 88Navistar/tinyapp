@@ -12,6 +12,11 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.get("/register", (req, res) => {
+  const  templateVars = { username: '' }
+  res.render("urls_register", templateVars)
+})
+
 app.get("/u/:shortURL", (req, res) => {
   //const shortURL = req.params.shortURL;
   const shortURL = req.params.shortURL;
@@ -59,6 +64,7 @@ app.post("/login", (req, res) => {
     .cookie('username', username)
     .redirect('/urls')
 })
+
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {longURL: req.body.longURL}
