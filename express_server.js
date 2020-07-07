@@ -1,7 +1,8 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const bodyParser = require("body-parser");
+const bodyParser = require("body-parser"); //adds req.body capabilities
+const cookieParser = require('cookie-parser')
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
@@ -52,10 +53,16 @@ app.listen(PORT, () => {
 });
 
 //POSTS
+app.post("/login", (req, res) => {
+  const username = req.body.username;
+  res
+    .cookie('username', username)
+    .redirect('/urls')
+})
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {longURL: req.body.longURL}
-  res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/delete",  (req, res) => {
