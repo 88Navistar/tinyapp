@@ -10,6 +10,14 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+app.get("/u/:shortURL", (req, res) => {
+  //const shortURL = req.params.shortURL;
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
+  return;
+});
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -44,8 +52,9 @@ app.listen(PORT, () => {
 
 //POSTS
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = {longURL: req.body.longURL}
+  res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
 
 const generateRandomString = function() {
