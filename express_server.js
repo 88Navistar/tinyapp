@@ -12,8 +12,22 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
 app.get("/register", (req, res) => {
-  const  templateVars = { username: '' }
+  const  templateVars = { user: '' }
+  
   res.render("urls_register", templateVars)
 })
 
@@ -37,8 +51,13 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  
+  let templateVars = { 
+    urls: urlDatabase,
+    //users: req.cookies['users']
+   };
   res.render('urls_index', templateVars);
+
 })
 
 app.get("/hello", (req, res) => {
@@ -60,9 +79,29 @@ app.listen(PORT, () => {
 //POSTS
 app.post("/login", (req, res) => {
   const username = req.body.username;
-  res
-    .cookie('username', username)
-    .redirect('/urls')
+  res.redirect('/urls')
+})
+
+app.post("/register", (req, res) => {
+  const email = req.body.email
+  const password = req.body.password
+  const id = generateRandomString();
+  
+  let registeredUser;
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      registeredUser = users[userId];
+    }
+  }
+  const newUser = {
+    id: id,
+    email,
+    password
+  }
+  users[id] = newUser;
+  //console.log('new User>>', newUser);
+  res.cookie('user_id', id)
+  res.redirect('/urls')
 })
 
 app.post("/urls", (req, res) => {
