@@ -26,7 +26,7 @@ const users = {
 };
 
 app.get("/register", (req, res) => {
-  const  templateVars = { user: '' }
+  const templateVars = { user: '' }
   
   res.render("urls_register", templateVars)
 })
@@ -51,10 +51,9 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  
-  let templateVars = { 
+  const templateVars = { 
     urls: urlDatabase,
-    //users: req.cookies['users']
+    user: req.cookies
    };
   res.render('urls_index', templateVars);
 
@@ -86,13 +85,15 @@ app.post("/register", (req, res) => {
   const email = req.body.email
   const password = req.body.password
   const id = generateRandomString();
+  const alreadyUser = getUserByEmail(users, email);
   
-  let registeredUser;
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      registeredUser = users[userId];
-    }
+  if (email === '' || password === '') {
+    return res.status(400).send('Both fields are required');
   }
+  if (alreadyUser) {
+    return res.status(400).send('a user with that email already exists')
+  }
+
   const newUser = {
     id: id,
     email,
@@ -101,7 +102,7 @@ app.post("/register", (req, res) => {
   users[id] = newUser;
   //console.log('new User>>', newUser);
   res.cookie('user_id', id)
-  res.redirect('/urls')
+  return res.redirect('/urls')
 })
 
 app.post("/urls", (req, res) => {
@@ -114,6 +115,15 @@ app.post("/urls/:shortURL/delete",  (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls')
 })
+
+const getUserByEmail = function(email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      return database[user];
+    }
+  }
+  return false;
+}
 
 const generateRandomString = function() {
   return Math.random().toString(36).substring(2, 8);
