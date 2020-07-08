@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser"); //adds req.body capabilities
 const cookieParser = require('cookie-parser')
 
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
@@ -24,6 +25,11 @@ const users = {
     password: "dishwasher-funk"
   }
 };
+app.get("/login", (req, res) => {
+  const templateVars = { user: '' }
+
+  res.render("urls_login", templateVars)
+})
 
 app.get("/register", (req, res) => {
   const templateVars = { user: '' }
@@ -40,13 +46,14 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { user: '' }
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
-  let templateVars = {shortURL, longURL};
+  let templateVars = {  shortURL, longURL };
   res.render("urls_show", templateVars);
 });
 
@@ -77,15 +84,30 @@ app.listen(PORT, () => {
 
 //POSTS
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.redirect('/urls')
+  const { email, password } = req.body
+  const alreadyUser = getUserByEmail(email, users);
+   if (alreadyUser) {
+     if (password === alreadyUser.password) {
+       res.cookie('user_id', alreadyUser.id)
+       res.redirect('/urls');
+     } else {
+      res.status(403).send('Password is incorrect, please re-enter');
+     }
+   } else {
+     res.status(403).send('Email does not exist, please register');
+   }
+     
 })
 
+app.post('/logout', (req, res) => {
+  req.cookies.alreadyUser = null;
+  return res.redirect('/login');
+});
+
 app.post("/register", (req, res) => {
-  const email = req.body.email
-  const password = req.body.password
+  const { email, password } = req.body
   const id = generateRandomString();
-  const alreadyUser = getUserByEmail(users, email);
+  const alreadyUser = getUserByEmail(email, users);
   
   if (email === '' || password === '') {
     return res.status(400).send('Both fields are required');
