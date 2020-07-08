@@ -22,8 +22,8 @@
   
         <%} if(user) { %>
           <form method="POST" action="/logout">
-          <h6><%= user.email %></h6>
-          <input type="submit" value="Logout">
+            <h6><%= user %></h6>
+            <input type="submit" value="Logout">
           </form>
         <%}%>
   </nav>
