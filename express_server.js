@@ -2,10 +2,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser"); //adds req.body capabilities
-const cookieParser = require('cookie-parser')
+const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(morgan('tiny'));
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
@@ -25,6 +27,20 @@ const users = {
     password: "dishwasher-funk"
   }
 };
+
+
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
+
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
+
+// app.get("/", (req, res) => {
+//   res.send("Hello!");
+// });
+
 app.get("/login", (req, res) => {
   const templateVars = { user: '' }
 
@@ -38,7 +54,6 @@ app.get("/register", (req, res) => {
 })
 
 app.get("/u/:shortURL", (req, res) => {
-  //const shortURL = req.params.shortURL;
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
@@ -46,41 +61,29 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: '' }
-  res.render("urls_new", templateVars);
+  if (!req.cookies.user_id) {
+    return res.redirect('/login');
+  }
+  const templateVars = {
+    user: users[req.cookies.user_id]
+  };
+  res.render('urls_new', templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
-  let templateVars = {  shortURL, longURL };
+  const templateVars = { shortURL, longURL, user: req.cookies.user_id };
   res.render("urls_show", templateVars);
 });
 
 app.get('/urls', (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    user: req.cookies
-   };
+    user: req.cookies.user_id
+  };
   res.render('urls_index', templateVars);
-
 })
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
 
 //POSTS
 app.post("/login", (req, res) => {
@@ -138,6 +141,11 @@ app.post("/urls/:shortURL/delete",  (req, res) => {
   res.redirect('/urls')
 })
 
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+
 const getUserByEmail = function(email, database) {
   for (const user in database) {
     if (database[user].email === email) {
@@ -150,3 +158,4 @@ const getUserByEmail = function(email, database) {
 const generateRandomString = function() {
   return Math.random().toString(36).substring(2, 8);
 };
+
