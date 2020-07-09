@@ -3,12 +3,12 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const morgan = require('morgan');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-let hashPassword = 'somestingthatbcryptsalysup'
+let hashPassword = 'somestingthatbcryptsalysup';
 
-const {urlsForUser, generateRandomString, getUserByEmail} = require('./helper');
+const {urlsForUser, generateRandomString, getUserByEmail} = require('./helpers');
 
 app.use(cookieSession({
   name: 'session',
@@ -26,6 +26,7 @@ const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
 // use purple as password to email: user@example.com
 const users = {
   "userRandomID": {
@@ -137,7 +138,7 @@ app.post('/logout', (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { user: '' };
   if (req.session.user_id) {
-    return res.redirect('/urls')
+    return res.redirect('/urls');
   }
   res.render("urls_register", templateVars);
 });
