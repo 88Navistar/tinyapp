@@ -11,8 +11,8 @@ app.use(morgan('tiny'));
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = { 
@@ -37,9 +37,14 @@ const users = {
 //   res.json(urlDatabase);
 // });
 
-// app.get("/", (req, res) => {
-//   res.send("Hello!");
-// });
+app.get("/", (req, res) => {
+  const userId = req.cookies.user_id;
+  if (!userId) {
+    return res.redirect('/login');
+  } else {
+    return res.redirect('/urls');
+  }
+});
 
 app.get("/login", (req, res) => {
   const templateVars = { user: '' }
@@ -54,35 +59,58 @@ app.get("/register", (req, res) => {
 })
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  res.redirect(longURL);
-  return;
+  const url = urlDatabase[req.params.shortURL]
+  if (url) {
+    return res.redirect(url.longURL);
+  } else {
+    return res.send('add 400 You are not logged in or do not have authorization to this URL');
+  }
 });
 
 app.get("/urls/new", (req, res) => {
+  let longURL = req.params.longURL
+  
   if (!req.cookies.user_id) {
     return res.redirect('/login');
   }
   const templateVars = {
-    user: users[req.cookies.user_id]
+    user: users[req.cookies.user_id],
+    longURL,
+    urlDatabase
   };
   res.render('urls_new', templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  const templateVars = { shortURL, longURL, user: req.cookies.user_id };
-  res.render("urls_show", templateVars);
+  
+  if (urlDatabase[req.params.shortURL] && users[req.cookies.user_id]) {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      user: users[req.cookies.user_id] };
+    console.log("templateVars", templateVars);
+    return res.render('urls_show', templateVars);
+  } else if (users[req.cookies.user_id] && users[req.cookies.user_id] !== urlDatabase[req.params.shortURL]) {
+    return res.send('You are logged in but do not have authorization to this URL');
+  } else {
+    return res.send('You are not logged in and do not have authorization to this URL');
+  }
+  //res.redirect('/login');
 });
 
 app.get('/urls', (req, res) => {
-  const templateVars = { 
-    urls: urlDatabase,
-    user: req.cookies.user_id
+  const loggedUser = req.cookies.user_id;
+  
+  if (loggedUser) {
+    const owner = urlsForUser(urlDatabase, loggedUser)
+    const templateVars = { 
+    urls: owner,
+    user: users[req.cookies.user_id]
   };
-  res.render('urls_index', templateVars);
+    res.render('urls_index', templateVars);
+  } else {
+    res.redirect("/login");
+  }
 })
 
 //POSTS
@@ -132,19 +160,50 @@ app.post("/register", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = {longURL: req.body.longURL}
+  urlDatabase[shortURL] = {longURL:req.body.longURL, userID: req.cookies.user_id};
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/urls/:shortURL/delete",  (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls')
-})
+app.post('/urls/:id', (req, res) => {
+  console.log("req.body", req.body);
+  //console.log('users', users[req.cookies.user_id]);
+  console.log('urlDatbase', urlDatabase);
+  if (urlDatabase[req.params.id] && req.cookies.user_id === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id] = {longURL: req.body.longURL, userID: req.cookies.user_id};
+    
+    res.redirect('/urls');
+  } else {
+    return res.send('No Authorization');
+  }  
+});
+
+app.post('/urls/:id/delete', (req, res) => {
+  const userId = req.cookies.user_id;
+  const shortUrl = req.params.id;
+  if (!userId) {
+    return res.send('No Authorization');
+  } else if (urlDatabase[shortUrl].userID === userId) {
+    delete urlDatabase[shortUrl];
+    return res.redirect('/urls');
+  } else {
+    return res.send('No Authorization');
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+const urlsForUser = function(database, id) {
+  const filter = {};
+  for (const url in database) {
+
+    if (id === database[url].userID) {
+      filter[url] = database[url];
+    }
+  }
+  return filter;
+};
 
 const getUserByEmail = function(email, database) {
   for (const user in database) {
