@@ -129,7 +129,7 @@ app.post("/login", (req, res) => {
       res.redirect(401, '/login');
     }
   } else {
-    res.status(403).send('Email does not exist, please register');
+    res.redirect(401, '/register');;
   }
    
 });
