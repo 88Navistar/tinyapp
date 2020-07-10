@@ -130,7 +130,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  req.session.alreadyUser = null;
+  req.session.user_id = null;
   return res.redirect('/login');
 });
 
