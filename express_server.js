@@ -76,12 +76,12 @@ app.get("/urls/:shortURL", (req, res) => {
       };
       res.render('urls_show', templateVars); //User is authorized to access
     } else if (users[req.session.user_id] !== urlDatabase[req.params.shortURL]) {
-      res.redirect(401, 'urls'); //user is not aurhorized to access shortened URL
+      res.redirect(401, '/urls'); //user is not aurhorized to access shortened URL
     } else {
-      res.redirect(404, 'urls'); //This URL does not exist
+      res.redirect(404, '/urls'); //This URL does not exist
     }
   } else {
-    res.redirect(401, 'urls');
+    res.redirect(401, '/urls');
   }
 });
   
@@ -126,7 +126,7 @@ app.post("/login", (req, res) => {
       req.session.user_id = alreadyUser.id;
       res.redirect('/urls');
     } else {
-      res.status(403).send('Password is incorrect, please re-enter');
+      res.redirect(401, '/login');
     }
   } else {
     res.status(403).send('Email does not exist, please register');
@@ -154,11 +154,11 @@ app.post("/register", (req, res) => {
   const alreadyUser = getUserByEmail(email, users);
   
   if (email === '' || password === '') {
-    return res.status(400).send('<html><body><p>Both fields are required</p></body></html>');
+    return res.status(400).send('Both fields are required');
   }
   
   if (alreadyUser) {
-    return res.status(400).send('<html><body><p>a user with that email already exists</p></body></html>');
+    return res.redirect(401, '/login');
   } else {
     hashPassword = bcrypt.hashSync(password, saltRounds);
     console.log(hashPassword);
@@ -188,7 +188,7 @@ app.post('/urls/:id', (req, res) => {
     
     res.redirect('/urls');
   } else {
-    return res.send('<html><body><p>No Authorization</p></body></html>');
+    return res.send('No Authorization');
   }
 });
 
@@ -196,12 +196,12 @@ app.post('/urls/:id/delete', (req, res) => {
   const userId = req.session.user_id;
   const shortUrl = req.params.id;
   if (!userId) {
-    return res.send('<html><body><p>No Authorization</p></body></html>');
+    return res.send('No Authorization');
   } else if (urlDatabase[req.params.id] && req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[shortUrl];
     return res.redirect('/urls');
   } else {
-    return res.send('<html><body><p>No Authorization</p></body></html>');
+    return res.send('No Authorization</p></body></html>');
   }
 });
 
