@@ -47,7 +47,7 @@ app.get("/u/:shortURL", (req, res) => {
   if (url) {
     return res.redirect(url.longURL);
   } else {
-    return res.send('<html><body><p>add 400 You are not logged in or do not have authorization to this URL</p></body></html>');
+    return res.redirect(404, '/urls');
   }
 });
 
@@ -166,6 +166,7 @@ app.post("/register", (req, res) => {
   };
   users[id] = newUser;
   req.session.user_id = id;
+  console.log(req.session.user_id = id);
   return res.redirect('/urls');
 });
 
@@ -191,7 +192,7 @@ app.post('/urls/:id/delete', (req, res) => {
   const shortUrl = req.params.id;
   if (!userId) {
     return res.send('<html><body><p>No Authorization</p></body></html>');
-  } else if (urlDatabase[shortUrl].userID === userId) {
+  } else if (urlDatabase[req.params.id] && req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[shortUrl];
     return res.redirect('/urls');
   } else {
