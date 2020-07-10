@@ -67,19 +67,24 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   
-  if (urlDatabase[req.params.shortURL] && users[req.session.user_id]) {
-    let templateVars = {
-      shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL].longURL,
-      user: users[req.session.user_id] };
-    console.log("templateVars", templateVars);
-    return res.render('urls_show', templateVars);
-  } else if (users[req.session.user_id] && users[req.session.user_id] !== urlDatabase[req.params.shortURL]) {
-    return res.send('<html><body><p>You are logged in but do not have authorization to this URL</p></body></html>');
+  if (urlDatabase[req.params.shortURL]) {
+    if (users[req.session.user_id]) {
+      let templateVars = {
+        shortURL: req.params.shortURL,
+        longURL: urlDatabase[req.params.shortURL].longURL,
+        user: users[req.session.user_id]
+      };
+      res.render('urls_show', templateVars); //User is authorized to access
+    } else if (users[req.session.user_id] !== urlDatabase[req.params.shortURL]) {
+      res.redirect(401, 'urls'); //user is not aurhorized to access shortened URL
+    } else {
+      res.redirect(404, 'urls'); //This URL does not exist
+    }
   } else {
-    return res.send('<html><body><p>You are logged in but do not have authorization to this URL</p></body></html>');
+    res.redirect(401, 'urls');
   }
 });
+  
 
 app.get('/urls', (req, res) => {
   const loggedUser = req.session.user_id;
@@ -121,10 +126,10 @@ app.post("/login", (req, res) => {
       req.session.user_id = alreadyUser.id;
       res.redirect('/urls');
     } else {
-      res.status(403).send('<html><body><p>Password is incorrect, please re-enter</p></body></html>');
+      res.status(403).send('Password is incorrect, please re-enter');
     }
   } else {
-    res.status(403).send('<html><body><p>Email does not exist, please register</p></body></html>');
+    res.status(403).send('Email does not exist, please register');
   }
    
 });
